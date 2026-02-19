@@ -52,6 +52,22 @@ function toggleCollapsible(headerElement) {
     card.classList.toggle('expanded');
 }
 
+/**
+ * Toggle reasoning dropdown visibility
+ */
+function toggleReasoningDropdown() {
+    const checkbox = document.getElementById('reasoningEnabled');
+    const dropdown = document.getElementById('reasoningEffort');
+    
+    if (checkbox.checked) {
+        dropdown.disabled = false;
+        dropdown.style.opacity = '1';
+    } else {
+        dropdown.disabled = true;
+        dropdown.style.opacity = '0.5';
+    }
+}
+
 // ============================================
 // VALIDATION
 // ============================================
@@ -372,8 +388,9 @@ function convertMessages(inputMessages, toolNameMap) {
  * Get configuration from UI
  */
 function getConfig() {
+    const reasoningEnabled = document.getElementById('reasoningEnabled').checked;
     return {
-        apiEndpoint: 'https://openaiqc.gep.com/platform2/openai/deployments/gpt-5.2/chat/completions',
+        apiEndpoint: document.getElementById('apiEndpoint').value || '',
         apiVersion: document.getElementById('apiVersion').value || '2024-02-01',
         apiKey: document.getElementById('apiKey').value || '<Your openai key>',
         hostHeader: document.getElementById('hostHeader').value || 'api.openai.com',
@@ -382,7 +399,9 @@ function getConfig() {
         toolChoice: document.getElementById('toolChoice').value || 'auto',
         frequencyPenalty: parseFloat(document.getElementById('frequencyPenalty').value) || 0,
         presencePenalty: parseFloat(document.getElementById('presencePenalty').value) || 0,
-        maxOutputTokens: parseInt(document.getElementById('maxOutputTokens').value) || 1000
+        maxOutputTokens: parseInt(document.getElementById('maxOutputTokens').value) || 1000,
+        reasoningEnabled: reasoningEnabled,
+        reasoningEffort: reasoningEnabled ? document.getElementById('reasoningEffort').value : null
     };
 }
 
@@ -400,6 +419,11 @@ function generateRequestBody(config, messages, tools) {
         messages: messages,
         tools: tools
     };
+    
+    // Add reasoning_effort parameter only if enabled
+    if (config.reasoningEnabled && config.reasoningEffort) {
+        body.reasoning_effort = config.reasoningEffort;
+    }
     
     return body;
 }

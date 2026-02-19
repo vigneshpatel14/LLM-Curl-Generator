@@ -288,6 +288,21 @@ body {
     color: var(--text-secondary);
 }
 
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+}
+
 .value-badge {
     padding: 0.1rem 0.5rem;
     background: var(--accent-primary);
