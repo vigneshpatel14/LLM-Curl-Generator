@@ -147,12 +147,12 @@ body {
 .header {
     position: sticky;
     top: 0;
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-    background: var(--bg-primary);
+    padding: 1rem 2rem;
+    margin: 0 -2rem 2rem -2rem;
+    background: var(--bg-secondary);
     z-index: 100;
     border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-md);
 }
 
 .header-content {
