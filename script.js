@@ -4,6 +4,47 @@
  */
 
 // ============================================
+// THEME TOGGLE
+// ============================================
+
+/**
+ * Toggle between light and dark theme
+ */
+function toggleTheme() {
+    const html = document.documentElement;
+    const themeIcon = document.getElementById('themeIcon');
+    const currentTheme = html.getAttribute('data-theme');
+    
+    if (currentTheme === 'light') {
+        html.removeAttribute('data-theme');
+        themeIcon.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        html.setAttribute('data-theme', 'light');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+/**
+ * Initialize theme from localStorage
+ */
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        if (themeIcon) themeIcon.textContent = '🌙';
+    } else {
+        if (themeIcon) themeIcon.textContent = '☀️';
+    }
+}
+
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', initTheme);
+
+// ============================================
 // VALIDATION
 // ============================================
 
@@ -183,6 +224,11 @@ function convertMessageContent(content) {
             .join('\n');
     }
     
+    // If content is an object (like tool response data), stringify it
+    if (content !== null && typeof content === 'object') {
+        return JSON.stringify(content);
+    }
+    
     // Fallback
     return String(content || '');
 }
@@ -190,10 +236,13 @@ function convertMessageContent(content) {
 /**
  * Convert messages array from KeyStudio format to OpenAI format
  * 
- * ROLE MAPPING:
- * - system, user, assistant, tool, function, developer → keep as-is
- * - Unknown role after assistant with tool_calls → convert to "tool" with matching tool_call_id
- * - Unknown role with no pending tool call → convert to "assistant"
+ * ROLE MAPPING STRATEGY:
+ * 1. If role is already valid (system, user, assistant, tool, function, developer) → keep as-is
+ * 2. If message has additional_kwargs.node_metadata.nodeType → use that to determine role:
+ *    - nodeType = "tool" or "script" → role = "tool" (with tool_call_id from pending queue)
+ *    - nodeType = "llm" or "agent" → role = "assistant"
+ * 3. If unknown role with pending tool_call → role = "tool" (with tool_call_id)
+ * 4. Otherwise → role = "assistant"
  * 
  * OpenAI REQUIREMENT: Every tool_call must have a matching tool response!
  */
@@ -266,28 +315,58 @@ function convertMessages(inputMessages, toolNameMap) {
             continue;
         }
 
-        // Check if this is a valid role
+        // Check if this is already a valid role
         const isValidRole = allowedRoles.has(msg.role);
-
-        // If unknown role AND we have pending tool calls → this is a tool response
-        if (!isValidRole && pendingToolCallIds.length > 0) {
-            const toolCallId = pendingToolCallIds.shift(); // Get the first pending ID
+        
+        // Extract nodeType from additional_kwargs.node_metadata if available
+        const nodeType = msg.additional_kwargs?.node_metadata?.nodeType;
+        
+        // Determine the final role based on nodeType or fallback logic
+        let finalRole = msg.role;
+        
+        if (isValidRole) {
+            // Already valid, keep as-is
+            finalRole = msg.role;
+        } else if (nodeType) {
+            // Use nodeType to determine role
+            if (nodeType === 'tool' || nodeType === 'script') {
+                // This is a tool response
+                if (pendingToolCallIds.length > 0) {
+                    const toolCallId = pendingToolCallIds.shift();
+                    convertedMessages.push({
+                        role: 'tool',
+                        tool_call_id: toolCallId,
+                        content: content || ''
+                    });
+                    continue;
+                } else {
+                    // No pending tool call, convert to assistant
+                    finalRole = 'assistant';
+                }
+            } else if (nodeType === 'llm' || nodeType === 'agent') {
+                finalRole = 'assistant';
+            } else {
+                // Unknown nodeType, default to assistant
+                finalRole = 'assistant';
+            }
+        } else if (pendingToolCallIds.length > 0) {
+            // Unknown role but has pending tool call → this is a tool response
+            const toolCallId = pendingToolCallIds.shift();
             convertedMessages.push({
                 role: 'tool',
                 tool_call_id: toolCallId,
                 content: content || ''
             });
             continue;
+        } else {
+            // Unknown role, no nodeType, no pending tool call → default to assistant
+            finalRole = 'assistant';
         }
 
-        // Skip empty messages (but only if not a tool response)
+        // Skip empty messages
         if (!content || content.trim() === '') {
             continue;
         }
-
-        // For valid roles → keep as-is
-        // For unknown roles with no pending tool call → convert to "assistant"
-        const finalRole = isValidRole ? msg.role : 'assistant';
         
         convertedMessages.push({
             role: finalRole,

@@ -1,10 +1,10 @@
 /* ============================================
    LLM CURL GENERATOR - STYLES
-   Dark Professional Theme
+   Dark & Light Theme Support
    ============================================ */
 
 :root {
-    /* Colors */
+    /* Dark Theme (Default) */
     --bg-primary: #0d1117;
     --bg-secondary: #161b22;
     --bg-tertiary: #21262d;
@@ -23,6 +23,9 @@
     --border-color: #30363d;
     --border-focus: #58a6ff;
     
+    --code-green: #7ee787;
+    --code-blue: #a5d6ff;
+    
     /* Spacing */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
@@ -38,6 +41,30 @@
     /* Fonts */
     --font-primary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #eaeef2;
+    --bg-card: #ffffff;
+    
+    --text-primary: #1f2328;
+    --text-secondary: #656d76;
+    --text-muted: #8c959f;
+    
+    --accent-primary: #0969da;
+    --accent-success: #1a7f37;
+    --accent-warning: #9a6700;
+    --accent-error: #cf222e;
+    --accent-purple: #8250df;
+    
+    --border-color: #d0d7de;
+    --border-focus: #0969da;
+    
+    --code-green: #116329;
+    --code-blue: #0550ae;
 }
 
 /* Reset & Base */
@@ -64,10 +91,44 @@ body {
 
 /* Header */
 .header {
+    position: relative;
     text-align: center;
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-xl) 0;
     border-bottom: 1px solid var(--border-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-primary);
+    transform: rotate(15deg);
+}
+
+.theme-icon {
+    font-size: 1.3rem;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-icon {
+    transform: scale(1.1);
 }
 
 .logo {
@@ -426,11 +487,11 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .curl-block {
-    color: #7ee787;
+    color: var(--code-green);
 }
 
 .ps-block {
-    color: #a5d6ff;
+    color: var(--code-blue);
 }
 
 /* Error Section */
