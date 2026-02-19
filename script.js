@@ -373,13 +373,16 @@ function convertMessages(inputMessages, toolNameMap) {
  */
 function getConfig() {
     return {
-        apiEndpoint: document.getElementById('apiEndpoint').value || 'https://api.openai.com/v1/chat/completions',
+        apiEndpoint: 'https://openaiqc.gep.com/platform2/openai/deployments/gpt-5.2/chat/completions',
         apiVersion: document.getElementById('apiVersion').value || '2024-02-01',
         apiKey: document.getElementById('apiKey').value || '<Your openai key>',
         hostHeader: document.getElementById('hostHeader').value || 'api.openai.com',
         temperature: parseFloat(document.getElementById('temperature').value) || 0.1,
         topP: parseFloat(document.getElementById('topP').value) || 0.1,
-        toolChoice: document.getElementById('toolChoice').value || 'auto'
+        toolChoice: document.getElementById('toolChoice').value || 'auto',
+        frequencyPenalty: parseFloat(document.getElementById('frequencyPenalty').value) || 0,
+        presencePenalty: parseFloat(document.getElementById('presencePenalty').value) || 0,
+        maxOutputTokens: parseInt(document.getElementById('maxOutputTokens').value) || 1000
     };
 }
 
@@ -387,13 +390,18 @@ function getConfig() {
  * Generate the request body
  */
 function generateRequestBody(config, messages, tools) {
-    return {
+    const body = {
         temperature: config.temperature,
         top_p: config.topP,
+        frequency_penalty: config.frequencyPenalty,
+        presence_penalty: config.presencePenalty,
+        max_completion_tokens: config.maxOutputTokens,
         tool_choice: config.toolChoice,
         messages: messages,
         tools: tools
     };
+    
+    return body;
 }
 
 /**
